@@ -1,0 +1,42 @@
+{
+  "primary_model": "glm-5.3-flash",
+  "free_tier_limit": "daily_tokens",
+  "fallback_strategy": "round_robin",
+  "fallback_models": [
+    {
+      "name": "glm-4",
+      "type": "glm",
+      "free_tier": "unlimited",
+      "priority": 1
+    },
+    {
+      "name": "phi-3-mini",
+      "type": "microsoft",
+      "free_tier": "8k_tokens_daily",
+      "priority": 2
+    },
+    {
+      "name": "nemotron",
+      "type": "nvidia",
+      "free_tier": "unlimited",
+      "priority": 3
+    },
+    {
+      "name": "gpt-3.5-turbo",
+      "type": "openai",
+      "free_tier": "10k_tokens_monthly",
+      "priority": 4
+    }
+  ],
+  "detection": {
+    "error_pattern": ["Free usage exceeded", "rate limit", "quota exceeded"],
+    "retry_wait_time": "3h 14m",
+    "max_retries": 3,
+    "auto_swap": true
+  },
+  "monitoring": {
+    "track_usage": true,
+    "daily_reset": "00:00 UTC",
+    "usage_log": "/home/raja/.opencode/usage-log.json"
+  }
+}

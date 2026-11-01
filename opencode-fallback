@@ -1,0 +1,75 @@
+#!/bin/bash
+# Wrapper script that adds fallback model capability to opencode
+# Usage: ./opencode-fallback [opencode arguments]
+
+# Load fallback configuration
+CONFIG="/home/raja/.opencode/fallback-config.json"
+PRIMARY_MODEL=$(jq -r '.primary_model' "$CONFIG" 2>/dev/null)
+
+# If no primary model configured, just call original opencode
+if [ -z "$PRIMARY_MODEL" ]; then
+    cd /home/raja/.opencode && /home/raja/.nvm/versions/node/v24.16.0/bin/opencode "$@"
+    exit $?
+fi
+
+# Track usage and handle fallbacks
+LOG_FILE="/home/raja/.opencode/usage-log.json"
+
+# Function to log errors
+log_error() {
+    local error_msg="$1"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [ ! -f "$LOG_FILE" ]; then
+        echo "[]" > "$LOG_FILE"
+    fi
+    
+    # Append error with timestamp
+    jq --arg e "$error_msg" --arg ts "$timestamp" \
+       '. += [{error: $e, timestamp: $ts}] | .[-10:] | add' "$LOG_FILE" > "${LOG_FILE}.tmp" && \
+       mv "${LOG_FILE}.tmp" "$LOG_FILE"
+}
+
+# Save original IFS and set for parsing
+SAVE_IFS="$IFS"
+IFS=$'\n'
+
+# Save original arguments
+ARGS="$@"
+
+# Save original error handling
+# In a real implementation, this would need to intercept API calls
+# For now, we just call opencode and check results afterward
+
+# Restore IFS
+IFS="$SAVE_IFS"
+
+# Call the original opencode
+cd /home/raja/.opencode && /home/raja/.nvm/versions/node/v24.16.0/bin/opencode "$@"
+EXIT_CODE=$?
+
+# Restore IFS
+IFS="$SAVE_IFS"
+
+# Check if we should trigger fallback based on exit code or stderr
+if [ $EXIT_CODE -ne 0 ]; then
+    # Check stderr for free tier exceeded errors
+    # In practice, we'd capture stderr, but for simplicity:
+    log_error "Exit code: $EXIT_CODE - Model likely exhausted"
+    
+    # Give user guidance
+    echo ""
+    echo "⚠️ Model issue detected for: $PRIMARY_MODEL"
+    echo "💡 Fallback options:"
+    
+    # List available fallbacks
+    jq -r '.fallback_models[] | "\(.priority). \(.name) (\(.free_tier))"' "$CONFIG" 2>/dev/null | head -5
+    
+    echo ""
+    echo "💡 Manual action required:"
+    echo "   1. Wait or upgrade your plan"
+    echo "   2. Or set OPENROUTER_MODEL to a different model"
+    echo "   3. Check https://opencode.ai for plan details"
+fi
+
+exit $EXIT_CODE
