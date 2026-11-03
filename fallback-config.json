@@ -1,42 +1,23 @@
 {
-  "primary_model": "glm-5.3-flash",
-  "free_tier_limit": "daily_tokens",
-  "fallback_strategy": "round_robin",
-  "fallback_models": [
-    {
-      "name": "glm-4",
-      "type": "glm",
-      "free_tier": "unlimited",
-      "priority": 1
-    },
-    {
-      "name": "phi-3-mini",
-      "type": "microsoft",
-      "free_tier": "8k_tokens_daily",
-      "priority": 2
-    },
-    {
-      "name": "nemotron",
-      "type": "nvidia",
-      "free_tier": "unlimited",
-      "priority": 3
-    },
-    {
-      "name": "gpt-3.5-turbo",
-      "type": "openai",
-      "free_tier": "10k_tokens_monthly",
-      "priority": 4
-    }
+  "provider": "openrouter",
+  "opencode_config": "/home/raja/.config/opencode/opencode.jsonc",
+  "ask_before_switch_free": true,
+  "ask_before_switch_paid": true,
+  "max_tokens_test": 5,
+  "exclude_model_patterns": [
+    "content-safety",
+    "rerank",
+    "embed",
+    "omni-30b-a3b-reasoning"
   ],
-  "detection": {
-    "error_pattern": ["Free usage exceeded", "rate limit", "quota exceeded"],
-    "retry_wait_time": "3h 14m",
-    "max_retries": 3,
-    "auto_swap": true
-  },
+  "preferred_paid_models": [
+    "google/gemini-3.8-flash",
+    "anthropic/claude-haiku-5.5",
+    "anthropic/claude-sonnet-5.5",
+    "anthropic/claude-opus-5.5"
+  ],
   "monitoring": {
     "track_usage": true,
-    "daily_reset": "00:00 UTC",
-    "usage_log": "/home/raja/.opencode/usage-log.json"
+    "state_file": "/home/raja/.opencode/fallback-state.json"
   }
 }
