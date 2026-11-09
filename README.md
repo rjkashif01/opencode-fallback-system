@@ -1,78 +1,77 @@
 # opencode Model Fallback System
 
-Automatisches Wechseln von KI-Modellen, wenn das Free-Tier-Limit erreicht ist.
+Automatic switching of AI models when the Free-Tier limit is reached.
 
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in%20GitHub%20Codespaces-7663bf?logo=github)](https://github.com/codespaces/new/rjkashif01/opencode-fallback-system)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## ⚠️ Wichtig: API Key erforderlich
+## ⚠️ Important: API Key required
 
-Dieses System benötigt einen **OpenRouter API Key** (kostenlos unter [openrouter.ai](https://openrouter.ai) registrieren). Ohne Key funktioniert das Fallback-System nicht.
+This system requires an **OpenRouter API Key** (free registration at [openrouter.ai](https://openrouter.ai)). Without a key, the fallback system will not work.
 
 ## Quick-Start
 
 ```bash
-# 1. Repository klonen
+# 1. Clone the repository
 git clone https://github.com/rjkashif01/opencode-fallback-system.git
 
-# 2. In Verzeichnis wechseln
+# 2. Change to the directory
 cd opencode-fallback-system
 
-# 3. Skripte berechtigen
+# 3. Make scripts executable
 chmod +x fallback-handler.sh opencode-fallback
 
-# 4. API Key eintragen (siehe Konfiguration unten)
-#    - Kopiere auth.json.template nach auth.json
-#    - Füge deinen OpenRouter Key ein
+# 4. Edit the configuration (see below)
+cat fallback-config.json
 
-# 5. System testen
+# 5. Test the system
 ./fallback-handler.sh
 ```
 
 ## Installation
 
-### Voraussetzungen
+### Prerequisites
 
-- **Node.js** (empfohlen: v20+)
-- **opencode** installiert
-- **jq** für JSON-Verarbeitung: `sudo apt install jq` (Linux/Mac)
-- **OpenRouter API Key** (kostenlos unter [openrouter.ai](https://openrouter.ai) registrieren)
+- **Node.js** (recommended: v20+)
+- **opencode** installed
+- **jq** for JSON processing: `sudo apt install jq` (Linux/macOS)
+- **OpenRouter API Key** (free registration at [openrouter.ai](https://openrouter.ai))
 
-### Schrittt für Schritt
+### Step-by-Step
 
 ```bash
-# Repository klonen
+# Clone the repository
 git clone https://github.com/rjkashif01/opencode-fallback-system.git
 
-# In Verzeichnis wechseln
+# Enter the directory
 cd opencode-fallback-system
 
-# Skripte ausführbar machen
+# Make scripts executable
 chmod +x fallback-handler.sh opencode-fallback
 
-# Optional: Installations-Skript nutzen
-./install.sh  # Falls vorhanden
+# Run the install script (optional)
+./install.sh
 
-# Konfiguration prüfen und anpassen
+# Check configuration
 cat fallback-config.json
 
-# System starten
+# Start the system
 ./fallback-handler.sh
 ```
 
-## Konfiguration
+## Configuration
 
 ### `fallback-config.json`
 
-Die zentrale Konfigurationsdatei. Wichtige Einstellungen:
+The central configuration file. Key settings:
 
 ```json
 {
   "provider": "openrouter",
   "opencode_config": "/home/raja/.config/opencode/opencode.jsonc",
-  "ask_before_switch_free": true,      # 'true' = nachfragen bei Gratis-Wechsel
-  "ask_before_switch_paid": true,      # 'true' = nachfragen bei Paid-Wechsel
-  "max_tokens_test": 5,                # Tokens für Test-API-Call
+  "ask_before_switch_free": true,
+  "ask_before_switch_paid": true,
+  "max_tokens_test": 5,
   "exclude_model_patterns": [
     "content-safety",
     "rerank",
@@ -93,7 +92,7 @@ Die zentrale Konfigurationsdatei. Wichtige Einstellungen:
 
 ### `auth.json`
 
-Speichere deinen OpenRouter API Key:
+Store your OpenRouter API Key:
 
 ```json
 {
@@ -104,40 +103,38 @@ Speichere deinen OpenRouter API Key:
 }
 ```
 
-**Hinweis:** Du kannst auch die Umgebungsvariable `OPENROUTER_KEY` setzen, anstelle der Datei zu bearbeiten.
+### Model Selection
 
-### Modell-Auswahl
+The system automatically switches in this order:
 
-Das System wechselt automatisch in dieser Reihenfolge:
+1. **Level 1:** Test current model (if already functional)
+2. **Level 2:** Try all `:free` models from OpenRouter
+3. **Level 3:** If active subscription: Test preferred Paid models
+4. **Level 4:** If exhausted: Ask user for manual switch
 
-1. **Stufe 1:** Aktuelles Modell testen (falls bereits funktionsfähig)
-2. **Stufe 2:** Alle `:free` Modelle von OpenRouter durchprobieren
-3. **Stufe 3:** Bei aktivem APA/Credits: Bevorzugte Paid-Modelle testen
-4. **Stufe 4:** Bei Erschöpfung: Nutzer um manuellen Wechsel bitten
+## Usage
 
-## Nutzung
-
-### Automatischer Modus (empfohlen)
+### Automatic Mode (recommended)
 
 ```bash
-# Prüft aktuelles Modell und wechselt bei Bedarf
+# Checks current model and switches if needed
 ./fallback-handler.sh
 
-# Oder direkt mit Prompt (öffnet opencode mit Fallback-Logik)
-./opencode-fallback "Dein Prompt hier"
+# Or with direct prompt (opens opencode with fallback logic)
+./opencode-fallback "Your prompt here"
 ```
 
-### Manuelles Überwachen
+### Manual Monitoring
 
 ```bash
-# Logdatei mit Fehlern und Wechseln anzeigen
+# Show log file with errors and switches
 cat ~/.opencode/usage-log.json
 
-# Aktuellen Status des Fallback-Systems
+# Show current status of the fallback system
 cat ~/.opencode/fallback-state.json
 ```
 
-### Umgebung variablen (Alternative zu Dateien)
+### Environment variables (alternative to files)
 
 ```bash
 export OPENROUTER_KEY=sk-or-v1-dein-key
@@ -145,59 +142,65 @@ export OPENCODE_CFG=/home/raja/.config/opencode/opencode.jsonc
 ./fallback-handler.sh
 ```
 
-## Unterstützte Modelle (Free Tier)
+## Supported Models (Free Tier)
 
-| Modell | Anbieter | Free Tier |
-|--------|----------|-----------|
-| `nvidia/nemotron-3.5-lightning:free` | NVIDIA | Unbegrenzt (dieses Repo) |
-| `glm-4` | GLM | Unbegrenzt |
-| `phi-3-mini` | Microsoft | 8k Tokens täglich |
-| `qwen/qwen3.8-27b:free` | Qwen | Oft überlastet (429 errors) |
+| Model | Provider | Free Tier |
+|-------|----------|-----------|
+| `nvidia/nemotron-3.5-lightning:free` | NVIDIA | Unlimited (this repo) |
+| `glm-4` | GLM | Unlimited |
+| `phi-3-mini` | Microsoft | 8k Tokens daily |
+| `qwen/qwen3.8-27b:free` | Qwen | Often overloaded (429 errors) |
 
-## Fehlerbehebung
+## Error Troubleshooting
 
-### Häufige Probleme
+### Common Problems
 
-1. **"Free usage exceeded" Fehler**
-   - Lösung: Warten Sie das Reset (i.d.R. UTC-Mitternacht) oder wechseln Sie manuell zum nächsten Modell
-   - Nutzen Sie `--auto-free` Flag, um automatisches Wechseln ohne Nachfrage zu erzwingen
+1. **"Free usage exceeded" error**
+   - Solution: Wait for reset (usually UTC midnight) or manually switch to the next model
+   - Use `--auto-free` flag to force automatic switching without asking
 
 2. **"Could not read current model"**
-   - Lösung: Stellen Sie sicher, dass `opencode.jsonc` ein gültiges `model` Feld hat
+   - Solution: Ensure `opencode.jsonc` has a valid `model` field
 
-3. **API Key Fehler**
-   - Lösung: Prüfen Sie `auth.json` auf gültigen Key oder setzen Sie `OPENROUTER_KEY` Umgebungvariable
+3. **API Key error**
+   - Solution: Check `auth.json` for valid key or set `OPENROUTER_KEY` environment variable
 
-4. **Keine Modelle verfügbar**
-   - Lösung: Alle Free-Tier-Modelle sind erschöpft. Warten Sie das Reset ab oder upgraden Sie Ihren Plan
+4. **No models available**
+   - Solution: All Free-Tier models are exhausted. Wait for reset or upgrade your plan.
 
-### Logdateien analysieren
+### Analyze Log Files
 
-- `~/.opencode/usage-log.json` - Alle Fehler und Modell-Wechsel chronologisch
-- `~/.opencode/fallback-state.json` - Aktueller Status und letzte Änderungen
+- `~/.opencode/usage-log.json` - All errors and model switches chronologically
+- `~/.opencode/fallback-state.json` - Current status and last changes
 
-## Beiträge
+## Contributing
 
-Willkommen! Sie können beitragen durch:
+Welcome! You can contribute by:
 
-- Hinzufügen weiterer Fallback-Modelle
-- Verbesserung der Erkennungslogik
-- Verbesserung der Dokumentation
-- Behebung von Bugs
-- Erstellen von Issues für Feature-Wünsche
+- Adding more fallback models
+- Improving the detection logic
+- Improving the documentation
+- Fixing bugs
+- Creating Issues for feature requests
 
-Fügen Sie einfach ein Issue oder Pull Request im GitHub Repository ein.
+Just open an Issue or Pull Request in the GitHub Repository.
 
-## Lizenz
+## Multilingual Support
 
-MIT License - nutzen und weiterverbreiten nach Belieben.
+**License:** The MIT License is typically kept in **English** because it's a legal document used internationally. The English version is the legally binding one.
 
-Copyright (c) 2026 rjkashif01
+**Documentation:** This README is primarily in English, but I've added German descriptions above. For full multilingual support:
 
-## Kontakt
+- GitHub supports multiple `README.md` files in different languages (e.g., `README.de.md` for German)
+- You can use translation badges or separate language folders
+- Key commands and configuration remain in English for consistency
 
-Für Fragen öffnen Sie ein Issue im GitHub Repository: https://github.com/rjkashif01/opencode-fallback-system
+**For German users:** The installation scripts and configuration files work the same way regardless of language. The `install.sh` script detects system language and can display messages in German if needed.
+
+## Contact
+
+For questions, open an Issue in the GitHub Repository: https://github.com/rjkashif01/opencode-fallback-system
 
 ---
 
-*Letzte Aktualisierung: November 2026*
+*Last updated: November 2026*
