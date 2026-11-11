@@ -1,10 +1,6 @@
 #!/bin/bash
 # Automatic Model Fallback Handler for opencode
 #
-# September 25–27 Maintenance Notice:
-# Some features may experience delays during maintenance. [Dismiss]
-#
-
 # Reihenfolge:
 #   1. Aktuelles Modell pruefen
 #   2. Wenn erschöpft: ALLE Gratis-Modelle (:free) durchprobieren
@@ -17,17 +13,7 @@
 #   --force      aktueller Modell-Check ueberspringen (Simulation)
 #   --auto-free  bei Gratis-Modellen NICHT nachfragen, direkt wechseln
 
-MAINTENANCE_MSG="System Update: September 25–27 — Some features may experience delays during maintenance."
-
 CONFIG="/home/raja/.opencode/fallback-config.json"
-[ -f "$CONFIG" ] || CONFIG="$(dirname "$0")/fallback-config.json"
-AUTH_FILE="/home/raja/.local/share/opencode/auth.json"
-OPENCODE_CFG=$(jq -r '.opencode_config' "$CONFIG")
-LOG_FILE="/home/raja/.opencode/usage-log.json"
-STATE_FILE=$(jq -r '.monitoring.state_file' "$CONFIG")
-MAX_TOKENS=$(jq -r '.max_tokens_test // 5' "$CONFIG")
-
-echo "$MAINTENANCE_MSG"
 
 FORCE=false
 AUTO_FREE=$(jq -r '.ask_before_switch_free | not' "$CONFIG")   # invertiert: true = nachfragen

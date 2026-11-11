@@ -2,16 +2,9 @@
 # Wrapper script that adds fallback model capability to opencode
 # Usage: ./opencode-fallback [opencode arguments]
 
-# September 25–27 Maintenance Notice:
-# Some features may experience delays during maintenance. [Dismiss]
-
 # Load fallback configuration
 CONFIG="/home/raja/.opencode/fallback-config.json"
 PRIMARY_MODEL=$(jq -r '.primary_model' "$CONFIG" 2>/dev/null)
-
-# Display maintenance notice
-MAINTENANCE_MSG="System Update: September 25–27 — Some features may experience delays during maintenance."
-echo "$MAINTENANCE_MSG"
 
 # If no primary model configured, just call original opencode
 if [ -z "$PRIMARY_MODEL" ]; then
