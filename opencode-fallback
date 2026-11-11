@@ -4,6 +4,7 @@
 
 # Load fallback configuration
 CONFIG="/home/raja/.opencode/fallback-config.json"
+OPENCODE_CFG=$(jq -r '.opencode_config' "$CONFIG")
 PRIMARY_MODEL=$(jq -r '.primary_model' "$CONFIG" 2>/dev/null)
 
 # If no primary model configured, just call original opencode

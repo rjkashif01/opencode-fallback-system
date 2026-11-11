@@ -14,6 +14,7 @@
 #   --auto-free  bei Gratis-Modellen NICHT nachfragen, direkt wechseln
 
 CONFIG="/home/raja/.opencode/fallback-config.json"
+OPENCODE_CFG=$(jq -r '.opencode_config' "$CONFIG")
 
 FORCE=false
 AUTO_FREE=$(jq -r '.ask_before_switch_free | not' "$CONFIG")   # invertiert: true = nachfragen
