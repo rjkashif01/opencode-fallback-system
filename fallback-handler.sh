@@ -18,17 +18,30 @@ OPENCODE_CFG=$(jq -r '.opencode_config' "$CONFIG")
 
 FORCE=false
 AUTO_FREE=$(jq -r '.ask_before_switch_free | not' "$CONFIG")   # invertiert: true = nachfragen
+RESET=false
 ASPAID=$(jq -r '.ask_before_switch_paid' "$CONFIG")
 for arg in "$@"; do
     case "$arg" in
         --force) FORCE=true ;;
         --auto-free) AUTO_FREE=true ;;
+        --reset) RESET=true ;;
     esac
 done
 
 openrouter_key() {
     jq -r '.openrouter.key // empty' "$AUTH_FILE" 2>/dev/null
 }
+
+# Reset fallback state if --reset flag used
+if [ "$RESET" = "true" ]; then
+    STATE_FILE="/home/raja/.opencode/fallback-state.json"
+    jq -e . "$STATE_FILE" >/dev/null 2>&1 || echo '{}' > "$STATE_FILE"
+    jq --arg ts "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
+       '.failed_today = [] | .events = .events + [{time: $ts, type: "state_reset", detail: "Manual reset by user"}] | .events = .events[-50:]' \
+       "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+    echo "✅ Fallback-State wurde zurückgesetzt (failed_taily geleert)"
+    exit 0
+fi
 
 current_model() {
     sed -n 's/^[[:space:]]*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$OPENCODE_CFG" | head -1
