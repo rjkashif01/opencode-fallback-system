@@ -59,6 +59,26 @@ test_model() {
     echo "$code"
 }
 
+# Funktion: Ollama Modell testen (lokale API)
+test_ollama_model() {
+    local model="$1"
+    local code
+    code=$(curl -s -o /tmp/ollama-test.json -w "%{http_code}" --max-time 30 \
+        -X POST "http://127.0.0.1:11434/api/chat" \
+        -H "Content-Type: application/json" \
+        -d "{\"model\":\"$model\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}")
+    echo "$code"
+}
+
+# Funktion: Zu Ollama Modell wechseln
+switch_model_ollama() {
+    local new="$1"
+    local full="ollama/$new"
+    cp "$OPENCODE_CFG" "$OPENCODE_CFG.bak-$(date +%Y%m%d-%H%M%S)"
+    sed -i "s|^\([[:space:]]*\"model\"[[:space:]]*:[[:space:]]*\)\"[^\"]*\"|\1\"$full\"|" "$OPENCODE_CFG"
+    [ "$(current_model)" = "$full" ]
+}
+
 log_event() {
     local type="$1" model="$2" detail="$3"
     jq -e . "$STATE_FILE" >/dev/null 2>&1 || echo '{}' > "$STATE_FILE"
@@ -206,6 +226,33 @@ for m in $(free_models "$CURRENT"); do
     fi
 done
 [ -z "$FOUND" ] && echo "  ❌ Kein Gratis-Modell verfügbar"
+
+# --- Stufe 1.5: Ollama lokal als letzte Rettung ---
+echo ""
+echo "🤖 Stufe 1.5: Lokale Modelle (Ollama) als Backup versuchen..."
+FOUND_OLLAMA=""
+
+# Ollama Models testen (aus der Liste, die per curl geholt wurde)
+OLLAMA_MODELS=(
+    "qwen2.5-coder:7b"
+    "mistral:7b"
+    "qwen2.5:14b-instruct"
+)
+
+for m in "${OLLAMA_MODELS[@]}"; do
+    CODE=$(test_ollama_model "$m")
+    if [ "$CODE" = "200" ]; then
+        echo "  ✔ funktioniert: $m (lokal)"
+        if switch_model_ollama "$m"; then
+            echo "✅ Gewechselt zu OLLAMA: $m"
+            log_event "switch_ollama" "$m" "Lokaler Modus – unbegrenzt"
+            exit 0
+        fi
+    else
+        echo "  ✗ $m (lokale Erreichbarkeit fehlgeschlagen)"
+    fi
+done
+[ -z "$FOUND_OLLAMA" ] && echo "  ❌ Kein Ollama-Modell erreichbar"
 
 # --- Stufe 2: Paid-Modelle, nur wenn Abo ---
 echo ""
