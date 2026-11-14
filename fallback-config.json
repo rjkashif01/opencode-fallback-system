@@ -1,7 +1,7 @@
 {
   "provider": "openrouter",
   "opencode_config": "/home/raja/.config/opencode/opencode.jsonc",
-  "ask_before_switch_free": true,
+  "ask_before_switch_free": false,
   "ask_before_switch_paid": true,
   "max_tokens_test": 5,
   "exclude_model_patterns": [
